@@ -150,6 +150,43 @@ describe('handlePullRequest', () => {
     )
   })
 
+  test('adds reviewers to pull requests and assigns them if addAssignees is set to reviewers', async () => {
+    const config = {
+      addAssignees: 'reviewers',
+      addReviewers: true,
+      numberOfReviewers: 2,
+      reviewers: ['reviewer1', 'reviewer2', 'reviewer3', 'pr-creator'],
+      skipKeywords: ['wip'],
+    } as any
+
+    const client = new github.GitHub('token')
+
+    client.issues = {
+      // tslint:disable-next-line:no-empty
+      addAssignees: jest.fn().mockImplementation(async () => {}),
+    } as any
+
+    client.pulls = {
+      // tslint:disable-next-line:no-empty
+      createReviewRequest: jest.fn().mockImplementation(async () => {}),
+    } as any
+
+    const addAssigneesSpy = jest.spyOn(client.issues, 'addAssignees')
+    const createReviewRequestSpy = jest.spyOn(
+      client.pulls,
+      'createReviewRequest'
+    )
+
+    await handler.handlePullRequest(client, context, config)
+
+    expect(addAssigneesSpy).toBeCalled()
+    const reviewers = createReviewRequestSpy.mock.calls[0][0].reviewers
+    expect(reviewers).toHaveLength(2)
+    reviewers.forEach(reviewer => expect(reviewer).toMatch(/reviewer/))
+    const assignees = addAssigneesSpy.mock.calls[0][0].assignees
+    expect(assignees).toEqual(reviewers)
+  })
+
   test('adds pr-creator as assignee if addAssignees is set to author', async () => {
     const client = new github.GitHub('token')
 

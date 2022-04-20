@@ -7,7 +7,7 @@ import { PullRequestEvent } from '@octokit/webhooks-types'
 
 export interface Config {
   addReviewers: boolean
-  addAssignees: boolean | string
+  addAssignees: boolean | 'author' | 'reviewers'
   reviewers: string[]
   assignees: string[]
   filterLabels?: {
@@ -104,6 +104,11 @@ export async function handlePullRequest(
       if (reviewers.length > 0) {
         await pr.addReviewers(reviewers)
         core.info(`Added reviewers to PR #${number}: ${reviewers.join(', ')}`)
+
+        if (addAssignees === 'reviewers') {
+          await pr.addAssignees(reviewers)
+          core.info(`Added assignees to PR #${number}: ${reviewers.join(', ')}`)
+        }
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -112,7 +117,7 @@ export async function handlePullRequest(
     }
   }
 
-  if (addAssignees) {
+  if (addAssignees && addAssignees !== 'reviewers') {
     try {
       const assignees = utils.chooseAssignees(owner, config)
 
