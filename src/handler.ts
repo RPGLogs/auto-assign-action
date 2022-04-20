@@ -22,6 +22,7 @@ export interface Config {
   reviewGroups: { [key: string]: string[] }
   assigneeGroups: { [key: string]: string[] }
   runOnDraft?: boolean
+  dryRun?: boolean
 }
 
 export async function handlePullRequest(
@@ -97,16 +98,19 @@ export async function handlePullRequest(
     }
   }
 
+  core.info(`addReviewers: ${addReviewers}`)
+  core.info(`addAssignees: ${addAssignees}`)
+
   if (addReviewers) {
     try {
       const reviewers = utils.chooseReviewers(owner, config)
 
       if (reviewers.length > 0) {
-        await pr.addReviewers(reviewers)
+        !config.dryRun && (await pr.addReviewers(reviewers))
         core.info(`Added reviewers to PR #${number}: ${reviewers.join(', ')}`)
 
         if (addAssignees === 'reviewers') {
-          await pr.addAssignees(reviewers)
+          !config.dryRun && (await pr.addAssignees(reviewers))
           core.info(`Added assignees to PR #${number}: ${reviewers.join(', ')}`)
         }
       }
