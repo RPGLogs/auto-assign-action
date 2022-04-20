@@ -2,6 +2,7 @@ import * as github from '@actions/github'
 import * as core from '@actions/core'
 import { Context } from '@actions/github/lib/context'
 import * as handler from '../src/handler'
+import * as yaml from 'js-yaml'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
@@ -152,11 +153,11 @@ describe('handlePullRequest', () => {
 
   test('adds reviewers to pull requests and assigns them if addAssignees is set to reviewers', async () => {
     const config = {
-      addAssignees: 'reviewers',
       addReviewers: true,
+      addAssignees: 'reviewers',
+      runOnDraft: true,
       numberOfReviewers: 2,
-      reviewers: ['reviewer1', 'reviewer2', 'reviewer3', 'pr-creator'],
-      skipKeywords: ['wip'],
+      reviewers: ['pr-creator', 'reviewer1', 'reviewer2', 'reviewer3'],
     } as any
 
     const client = new github.GitHub('token')
@@ -179,7 +180,7 @@ describe('handlePullRequest', () => {
 
     await handler.handlePullRequest(client, context, config)
 
-    expect(addAssigneesSpy).toBeCalled()
+    expect(addAssigneesSpy).toBeCalledTimes(1)
     const reviewers = createReviewRequestSpy.mock.calls[0][0].reviewers
     expect(reviewers).toHaveLength(2)
     reviewers.forEach(reviewer => expect(reviewer).toMatch(/reviewer/))
@@ -936,5 +937,37 @@ describe('handlePullRequest', () => {
     expect(createReviewRequestSpy.mock.calls[0][0].reviewers[0]).toMatch(
       /reviewer/
     )
+  })
+
+  test('loading', () => {
+    const config = `
+addReviewers: true
+addAssignees: 'reviewers'
+runOnDraft: true
+numberOfReviewers: 2
+reviewers:
+  - jasonrm
+  - nhmelo
+  - tony-taylor
+  - emallson
+  - WarcraftYax
+  - WarcraftLogs
+  - ljosberinn
+`
+    expect(yaml.safeLoad(config)).toEqual({
+      addReviewers: true,
+      addAssignees: 'reviewers',
+      runOnDraft: true,
+      numberOfReviewers: 2,
+      reviewers: [
+        'jasonrm',
+        'nhmelo',
+        'tony-taylor',
+        'emallson',
+        'WarcraftYax',
+        'WarcraftLogs',
+        'ljosberinn',
+      ],
+    })
   })
 })

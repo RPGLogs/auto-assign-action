@@ -38,9 +38,9 @@ export function chooseAssignees(owner: string, config: Config): string[] {
     useAssigneeGroups && Object.keys(assigneeGroups).length > 0
 
   if (typeof addAssignees === 'string') {
-    if (addAssignees !== 'author') {
+    if (addAssignees === 'reviewers') {
       throw new Error(
-        "Error in configuration file to do with using addAssignees. Expected 'addAssignees' variable to be either boolean or 'author'"
+        "Reached `chooseAssignees` when addAssignees is set to 'reviewers'. This should not happen."
       )
     }
     chosenAssignees = [owner]
