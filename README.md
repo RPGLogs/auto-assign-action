@@ -23,7 +23,7 @@ jobs:
 
 Change event that triggers a workflow to the `pull_request_target` if you want to enable the auto-assign action when opening pull requests from fork repositories or bots like Dependabot.
 
-Using dangerous misuse of the `pull_request_target` event can be a security risk, so make sure you understand pros and cons before using it. 
+Using dangerous misuse of the `pull_request_target` event can be a security risk, so make sure you understand pros and cons before using it.
 
 See below for details:
 
@@ -41,6 +41,11 @@ name: 'Auto Assign'
 ```
 
 Create a separate configuration file for the auto-assign action (e.g. `.github/auto_assign.yml`).
+
+### Changes from `kentaro-m`'s repository
+
+- `addAssignees` supports `reviewers` as an option to add the reviewers as the assignees
+- added `dryRun` option to log output and then exit rather than actually assigning anyone
 
 ### Single Reviewers List
 
