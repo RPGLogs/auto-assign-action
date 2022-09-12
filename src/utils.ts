@@ -2,8 +2,13 @@ import _ from 'lodash'
 import * as github from '@actions/github'
 import * as yaml from 'js-yaml'
 import { Config } from './handler'
+import { PullRequest } from './pull_request'
 
-export function chooseReviewers(owner: string, config: Config): string[] {
+export function chooseReviewers(
+  owner: string,
+  config: Config,
+  pr: PullRequest
+): string[] {
   const { useReviewGroups, reviewGroups, numberOfReviewers, reviewers } = config
   let chosenReviewers: string[] = []
   const useGroups: boolean =
@@ -11,18 +16,28 @@ export function chooseReviewers(owner: string, config: Config): string[] {
 
   if (useGroups) {
     chosenReviewers = chooseUsersFromGroups(
+      pr.assignKey,
       owner,
       reviewGroups,
       numberOfReviewers
     )
   } else {
-    chosenReviewers = chooseUsers(reviewers, numberOfReviewers, owner)
+    chosenReviewers = chooseUsers(
+      pr.assignKey,
+      reviewers,
+      numberOfReviewers,
+      owner
+    )
   }
 
   return chosenReviewers
 }
 
-export function chooseAssignees(owner: string, config: Config): string[] {
+export function chooseAssignees(
+  owner: string,
+  config: Config,
+  pr: PullRequest
+): string[] {
   const {
     useAssigneeGroups,
     assigneeGroups,
@@ -46,6 +61,7 @@ export function chooseAssignees(owner: string, config: Config): string[] {
     chosenAssignees = [owner]
   } else if (useGroups) {
     chosenAssignees = chooseUsersFromGroups(
+      pr.assignKey,
       owner,
       assigneeGroups,
       numberOfAssignees || numberOfReviewers
@@ -53,6 +69,7 @@ export function chooseAssignees(owner: string, config: Config): string[] {
   } else {
     const candidates = assignees ? assignees : reviewers
     chosenAssignees = chooseUsers(
+      pr.assignKey,
       candidates,
       numberOfAssignees || numberOfReviewers,
       owner
@@ -62,7 +79,11 @@ export function chooseAssignees(owner: string, config: Config): string[] {
   return chosenAssignees
 }
 
+// some low primes to shuffle the list
+const primes = [1, 503, 521, 541, 599, 733]
+
 export function chooseUsers(
+  key: number,
   candidates: string[],
   desiredNumber: number,
   filterUser: string = ''
@@ -76,7 +97,16 @@ export function chooseUsers(
     return filteredCandidates
   }
 
-  return _.sampleSize(filteredCandidates, desiredNumber)
+  const result: string[] = []
+  const numberToAssign = Math.min(desiredNumber, filteredCandidates.length)
+  for (let i = 0; i < numberToAssign; i++) {
+    const candidateIndex = (key * primes[i]) % filteredCandidates.length
+    const assignee = filteredCandidates[candidateIndex]
+    result.push(assignee)
+    filteredCandidates.splice(candidateIndex, 1)
+  }
+
+  return result
 }
 
 export function includesSkipKeywords(
@@ -93,13 +123,14 @@ export function includesSkipKeywords(
 }
 
 export function chooseUsersFromGroups(
+  key: number,
   owner: string,
   groups: { [key: string]: string[] } | undefined,
   desiredNumber: number
 ): string[] {
   let users: string[] = []
   for (const group in groups) {
-    users = users.concat(chooseUsers(groups[group], desiredNumber, owner))
+    users = users.concat(chooseUsers(key, groups[group], desiredNumber, owner))
   }
   return users
 }

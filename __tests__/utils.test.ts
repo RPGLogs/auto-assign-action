@@ -14,7 +14,7 @@ describe('chooseUsers', () => {
     const reviewers = ['reviewer1', 'reviewer2', 'reviewer3', 'pr-creator']
     const numberOfReviewers = 0
 
-    const list = chooseUsers(reviewers, numberOfReviewers, prCreator)
+    const list = chooseUsers(1000, reviewers, numberOfReviewers, prCreator)
 
     expect(list).toEqual(['reviewer1', 'reviewer2', 'reviewer3'])
   })
@@ -24,7 +24,7 @@ describe('chooseUsers', () => {
     const reviewers = ['reviewer1', 'pr-creator']
     const numberOfReviewers = 1
 
-    const list = chooseUsers(reviewers, numberOfReviewers, prCreator)
+    const list = chooseUsers(1000, reviewers, numberOfReviewers, prCreator)
 
     expect(list).toEqual(['reviewer1'])
   })
@@ -34,7 +34,7 @@ describe('chooseUsers', () => {
     const reviewers = ['reviewer1', 'reviewer2', 'reviewer3', 'pr-creator']
     const numberOfReviewers = 2
 
-    const list = chooseUsers(reviewers, numberOfReviewers, prCreator)
+    const list = chooseUsers(1000, reviewers, numberOfReviewers, prCreator)
 
     expect(list.length).toEqual(2)
   })
@@ -44,7 +44,7 @@ describe('chooseUsers', () => {
     const reviewers = ['pr-creator']
     const numberOfReviewers = 0
 
-    const list = chooseUsers(reviewers, numberOfReviewers, prCreator)
+    const list = chooseUsers(1000, reviewers, numberOfReviewers, prCreator)
 
     expect(list.length).toEqual(0)
   })
@@ -53,9 +53,47 @@ describe('chooseUsers', () => {
     const reviewers = ['pr-creator']
     const numberOfReviewers = 0
 
-    const list = chooseUsers(reviewers, numberOfReviewers)
+    const list = chooseUsers(1000, reviewers, numberOfReviewers)
 
     expect(list).toEqual(expect.arrayContaining(['pr-creator']))
+  })
+
+  test('returns multiple distinct users', () => {
+    const reviewers = ['pr-creator', 'a', 'b', 'c']
+    const numberOfReviewers = 2
+
+    const list = chooseUsers(1000, reviewers, numberOfReviewers, 'pr-creator')
+    expect(list).toEqual(Array.from(new Set(list)))
+
+    const list2 = chooseUsers(
+      1000 + reviewers.length,
+      reviewers,
+      numberOfReviewers,
+      'pr-creator'
+    )
+    expect(list2).toEqual(Array.from(new Set(list2)))
+  })
+
+  test('returns different users each time the same modulo value is picked', () => {
+    const reviewers = ['pr-creator', 'a', 'b', 'c']
+    const numberOfReviewers = 2
+
+    const list = chooseUsers(1000, reviewers, numberOfReviewers, 'pr-creator')
+    const list2 = chooseUsers(
+      1000 + reviewers.length,
+      reviewers,
+      numberOfReviewers,
+      'pr-creator'
+    )
+    const list3 = chooseUsers(
+      1000 + 2 * reviewers.length,
+      reviewers,
+      numberOfReviewers,
+      'pr-creator'
+    )
+    expect(list).not.toEqual(list2)
+    expect(list2).not.toEqual(list3)
+    expect(list3).not.toEqual(list)
   })
 })
 
@@ -90,7 +128,12 @@ describe('chooseUsersFromGroups', () => {
     const numberOfReviewers = 1
 
     // WHEN
-    const list = chooseUsersFromGroups(owner, reviewers, numberOfReviewers)
+    const list = chooseUsersFromGroups(
+      1000,
+      owner,
+      reviewers,
+      numberOfReviewers
+    )
 
     // THEN
     expect(list).toEqual(['reviewer1', 'reviewer2'])
@@ -106,7 +149,12 @@ describe('chooseUsersFromGroups', () => {
     const numberOfReviewers = 1
 
     // WHEN
-    const list = chooseUsersFromGroups(owner, reviewers, numberOfReviewers)
+    const list = chooseUsersFromGroups(
+      1000,
+      owner,
+      reviewers,
+      numberOfReviewers
+    )
 
     // THEN
     expect(list.length).toEqual(1)
@@ -125,7 +173,12 @@ describe('chooseUsersFromGroups', () => {
     const numberOfReviewers = 1
 
     // WHEN
-    const list = chooseUsersFromGroups(owner, reviewers, numberOfReviewers)
+    const list = chooseUsersFromGroups(
+      1000,
+      owner,
+      reviewers,
+      numberOfReviewers
+    )
 
     // THEN
     expect(list.length).toEqual(3)
@@ -144,7 +197,12 @@ describe('chooseUsersFromGroups', () => {
     const numberOfReviewers = 1
 
     // WHEN
-    const list = chooseUsersFromGroups(owner, reviewers, numberOfReviewers)
+    const list = chooseUsersFromGroups(
+      1000,
+      owner,
+      reviewers,
+      numberOfReviewers
+    )
 
     // THEN
     expect(list.length).toEqual(1)
@@ -161,7 +219,12 @@ describe('chooseUsersFromGroups', () => {
     const numberOfReviewers = 2
 
     // WHEN
-    const list = chooseUsersFromGroups(owner, reviewers, numberOfReviewers)
+    const list = chooseUsersFromGroups(
+      1000,
+      owner,
+      reviewers,
+      numberOfReviewers
+    )
 
     // THEN
     expect(list.length).toEqual(1)
@@ -178,7 +241,12 @@ describe('chooseUsersFromGroups', () => {
     const numberOfReviewers = 2
 
     // WHEN
-    const list = chooseUsersFromGroups(owner, reviewers, numberOfReviewers)
+    const list = chooseUsersFromGroups(
+      1000,
+      owner,
+      reviewers,
+      numberOfReviewers
+    )
 
     // THEN
     expect(list.length).toEqual(0)

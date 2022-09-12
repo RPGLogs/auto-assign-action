@@ -103,7 +103,7 @@ export async function handlePullRequest(
 
   if (addReviewers) {
     try {
-      const reviewers = utils.chooseReviewers(owner, config)
+      const reviewers = utils.chooseReviewers(owner, config, pr)
 
       if (reviewers.length > 0) {
         !config.dryRun && (await pr.addReviewers(reviewers))
@@ -123,7 +123,7 @@ export async function handlePullRequest(
 
   if (addAssignees && addAssignees !== 'reviewers') {
     try {
-      const assignees = utils.chooseAssignees(owner, config)
+      const assignees = utils.chooseAssignees(owner, config, pr)
 
       if (assignees.length > 0) {
         await pr.addAssignees(assignees)

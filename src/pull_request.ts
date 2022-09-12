@@ -40,4 +40,10 @@ export class PullRequest {
     const { labels: pullRequestLabels = [] } = this.context.payload.pull_request
     return pullRequestLabels.some(label => labels.includes(label.name))
   }
+
+  get assignKey(): number {
+    return this.context.payload.pull_request
+      ? this.context.payload.pull_request.number
+      : 0
+  }
 }
