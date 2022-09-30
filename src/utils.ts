@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as yaml from 'js-yaml'
 import { Config } from './handler'
@@ -16,14 +17,14 @@ export function chooseReviewers(
 
   if (useGroups) {
     chosenReviewers = chooseUsersFromGroups(
-      pr.assignKey,
+      pr.assignKey(),
       owner,
       reviewGroups,
       numberOfReviewers
     )
   } else {
     chosenReviewers = chooseUsers(
-      pr.assignKey,
+      pr.assignKey(),
       reviewers,
       numberOfReviewers,
       owner
@@ -61,7 +62,7 @@ export function chooseAssignees(
     chosenAssignees = [owner]
   } else if (useGroups) {
     chosenAssignees = chooseUsersFromGroups(
-      pr.assignKey,
+      pr.assignKey(),
       owner,
       assigneeGroups,
       numberOfAssignees || numberOfReviewers
@@ -69,7 +70,7 @@ export function chooseAssignees(
   } else {
     const candidates = assignees ? assignees : reviewers
     chosenAssignees = chooseUsers(
-      pr.assignKey,
+      pr.assignKey(),
       candidates,
       numberOfAssignees || numberOfReviewers,
       owner
@@ -92,6 +93,10 @@ export function chooseUsers(
     return reviewer !== filterUser
   })
 
+  core.info(
+    `Assigning ${desiredNumber} Reviewers for PR (Key: ${key}). Creator: ${filterUser}. Candidates: ${filteredCandidates}`
+  )
+
   // all-assign
   if (desiredNumber === 0) {
     return filteredCandidates
@@ -102,8 +107,12 @@ export function chooseUsers(
   for (let i = 0; i < numberToAssign; i++) {
     const candidateIndex = (key * primes[i]) % filteredCandidates.length
     const assignee = filteredCandidates[candidateIndex]
+    core.info(
+      `Assigning ${assignee} (${key} * ${primes[i]} mod ${filteredCandidates.length}) = ${candidateIndex}`
+    )
     result.push(assignee)
     filteredCandidates.splice(candidateIndex, 1)
+    core.info(`Remaining candidates: ${filteredCandidates}`)
   }
 
   return result
